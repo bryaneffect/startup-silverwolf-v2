@@ -1,0 +1,620 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+:root {
+    --bg: #ede0ff;
+    --text-primary: #1b0f2d;
+    --text-secondary: #4a2e73;
+    --text-muted: #7a63a0;
+    --border-light: #d8c6f2;
+    --border-medium: #b294e0;
+    --code-bg: #e0cffb;
+    --code-border: #cbb2ec;
+    --quote-border: #8a5cc9;
+    --hr-color: #d8c6f2;
+    --link-color: #5c2e9c;
+    --link-hover: #3a1660;
+    --pattern-fg: color-mix(in oklab, var(--text-primary) 10%, transparent);
+}
+
+html.dark {
+    --bg: #020104;
+    --text-primary: #e4daf7;
+    --text-secondary: #9b83c4;
+    --text-muted: #574372;
+    --border-light: #0d0918;
+    --border-medium: #1e1030;
+    --code-bg: #080511;
+    --code-border: #130b1f;
+    --quote-border: #3a2558;
+    --hr-color: #0d0918;
+    --link-color: #9c78dd;
+    --link-hover: #c3a4f0;
+    color-scheme: dark;
+}
+
+* {
+    font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+}
+
+html:not(.dark) {
+    color-scheme: light;
+}
+
+body,
+body * {
+    transition-property:
+        color, background-color, border-color, outline-color, text-decoration-color,
+        fill, stroke;
+    transition-duration: 150ms;
+}
+
+/* ─── MAIN CARD ──────────────────────────────────────────────── */
+.bg-darkslide {
+    background: color-mix(in oklab, var(--bg) 35%, transparent);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+
+/* ─── PERSPECTIVE ────────────────────────────────────────────── */
+.perspective-wrapper {
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+}
+
+/* ─── SETTINGS SECTION HEADINGS ─────────────────────────────── */
+.settings-heading {
+    font-size: 1.75rem;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+    .settings-heading {
+        font-size: 2.25rem;
+    }
+}
+
+.settings-heading.heading-inline {
+    margin-bottom: 0;
+}
+
+/* ─── SETTINGS PANEL ─────────────────────────────────────────── */
+#settings-panel {
+    transform-style: preserve-3d;
+    transition-duration: 0.8s;
+    transition-property: transform, opacity;
+    filter: drop-shadow(0 0px 100px color-mix(in oklab, var(--link-hover) 5%, transparent));
+    background: var(--bg);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#settings-panel.show-menu {
+    transform: translateY(3%) scale(1) rotate(-355deg) rotateY(20deg) translateZ(40px);
+    opacity: 1;
+}
+
+#settings-panel.show-menu::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    border: inherit;
+    border-radius: inherit;
+    transform: translateZ(0px) translateX(0px) translateY(0px);
+    opacity: 0;
+    filter: brightness(0.8);
+    z-index: -1;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ─── MENU / BACK BUTTON HOVER ───────────────────────────────── */
+.menu-btn {
+    transition: all 0.3s ease;
+    width: auto;
+}
+
+.menu-btn:hover {
+    letter-spacing: 200%;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* ─── MOBILE OVERRIDES ───────────────────────────────────────── */
+@media (max-width: 639px) {
+    #main-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100dvh;
+        border-radius: 0 !important;
+        padding: 1.25rem 1rem !important;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #settings-panel.show-menu {
+        transform: translateY(0%) scale(1) rotate(0deg) rotateY(0deg) translateZ(0px);
+    }
+
+    #settings-panel {
+        max-height: 100dvh !important;
+        height: 100dvh !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+        padding: 1.25rem 1rem !important;
+    }
+}
+
+/* ─── GLASS ──────────────────────────────────────────────────── */
+.glass {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(4.5px);
+    -webkit-backdrop-filter: blur(4.5px);
+}
+
+/* ─── 3-D TILE HOVER (search bar) ───────────────────────────── */
+.tile-3d {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    perspective: 1000px;
+}
+
+.tile-3d::before,
+.tile-3d::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    border: inherit;
+    border-radius: inherit;
+    transform: translateZ(0px) translateX(0px) translateY(0px);
+    opacity: 0;
+    z-index: -1;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.tile-3d::before { filter: brightness(0.8); z-index: -1; }
+.tile-3d::after  { filter: brightness(0.6); z-index: -2; }
+
+@media (hover: hover) {
+    .tile-3d:hover {
+        transform: perspective(1200px) rotateX(6deg) rotateY(-6deg) translateZ(20px);
+        z-index: 5;
+        box-shadow:
+            -10px -10px 26px rgba(0, 0, 0, 0.25),
+            10px 10px 26px rgba(0, 0, 0, 0.12);
+    }
+
+    .tile-3d:hover::before {
+        transform: translateZ(-10px) translateX(8px) translateY(8px);
+        opacity: 0.5;
+    }
+
+    .tile-3d:hover::after {
+        transform: translateZ(-20px) translateX(14px) translateY(14px);
+        opacity: 0.3;
+    }
+
+    .tile-3d:focus-within {
+        transform: perspective(1200px) rotateX(6deg) rotateY(-6deg) translateZ(20px);
+        z-index: 5;
+    }
+}
+
+/* ─── TRACK (footer marquee) ─────────────────────────────────── */
+.track-horizontal {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1.5rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.track-horizontal span {
+    letter-spacing: 0.1em;
+    font-weight: normal;
+    transition: all 0.5s ease;
+    animation: lightTrail 2s ease-in-out infinite;
+    opacity: 0;
+}
+
+@keyframes lightTrail {
+    0%   { opacity: 0; }
+    10%  { opacity: 1; }
+    25%  { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+.track-horizontal span:nth-child(1) { animation-delay: 0s;   }
+.track-horizontal span:nth-child(2) { animation-delay: 0.1s; }
+.track-horizontal span:nth-child(3) { animation-delay: 0.2s; }
+
+/* ─── SAFE AREA ──────────────────────────────────────────────── */
+@supports (padding: env(safe-area-inset-bottom)) {
+    body {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ─── SETTINGS MENU / SLIDE SUB-PAGES ─────────────────────────── */
+.settings-shell {
+    overflow: hidden;
+}
+
+.settings-view {
+    position: absolute;
+    inset: 0;
+    padding: 1.5rem 1.5rem 2rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 640px) {
+    .settings-view {
+        padding: 2rem;
+    }
+}
+
+.settings-home-view {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+    transition: transform 0.52s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease;
+}
+
+.settings-home-view:not(.is-active) {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.settings-subview {
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.52s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease;
+}
+
+.settings-subview.is-active {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.settings-subview.is-leaving {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.settings-menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 1rem;
+}
+
+.settings-menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0.15rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border-medium);
+    color: var(--text-primary);
+    text-align: left;
+    font: inherit;
+    font-size: clamp(1.7rem, 5vw, 2.7rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    cursor: pointer;
+    transition: padding-left 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+.settings-menu-item:hover {
+    padding-left: 0.8rem;
+    color: var(--link-hover);
+    border-color: var(--link-hover);
+}
+
+.settings-menu-arrow {
+    font-size: 1.25rem;
+    font-weight: 400;
+    opacity: 0.55;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.settings-menu-item:hover .settings-menu-arrow {
+    transform: translateX(0.45rem);
+    opacity: 1;
+}
+
+.settings-subheader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.settings-back-sub {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.settings-back-sub:hover {
+    color: var(--link-hover);
+    transform: translateX(-0.25rem);
+}
+
+.settings-content {
+    max-width: 100%;
+}
+
+@media (max-width: 639px) {
+    .settings-view {
+        padding: 1.25rem 1rem;
+    }
+
+    .settings-menu-item {
+        font-size: 1.75rem;
+    }
+}
+
+
+/* ─── Banner position editor ─────────────────────────────────── */
+.banner-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.72);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.banner-editor.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.banner-editor-card {
+    width: min(680px, 100%);
+    padding: 1.25rem;
+    border: 1px solid var(--border-medium);
+    border-radius: 0.75rem;
+    background: var(--bg);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+.banner-editor-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.banner-editor-title {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.banner-editor-hint {
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.banner-editor-close {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.7rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.banner-editor-close:hover {
+    color: var(--link-hover);
+}
+
+.banner-editor-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 6 / 1;
+    overflow: hidden;
+    background: var(--code-bg);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.banner-editor-stage.is-dragging {
+    cursor: grabbing;
+}
+
+.banner-editor-stage img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 50%;
+    transform: scale(1);
+    transform-origin: center center;
+    pointer-events: none;
+    user-select: none;
+    will-change: transform;
+}
+
+.banner-editor-guide {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--link-hover) 30%, transparent);
+}
+
+.banner-editor-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-top: 0.9rem;
+}
+
+.banner-position-btn,
+.banner-position-center {
+    min-width: 2.3rem;
+    height: 2.2rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--border-medium);
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.banner-position-btn:hover,
+.banner-position-center:hover {
+    border-color: var(--link-hover);
+    color: var(--link-hover);
+}
+
+.banner-position-center {
+    margin-left: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.65rem;
+}
+
+.banner-editor-zoom {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-top: 0.8rem;
+}
+
+.banner-zoom-btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    flex: 0 0 2.2rem;
+    border: 1px solid var(--border-medium);
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.banner-zoom-btn:hover {
+    border-color: var(--link-hover);
+    color: var(--link-hover);
+}
+
+.banner-zoom-range {
+    flex: 1;
+    min-width: 120px;
+    accent-color: var(--link-hover);
+    cursor: pointer;
+}
+
+.banner-zoom-value {
+    min-width: 3.2rem;
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.banner-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.banner-editor-secondary,
+.banner-editor-primary {
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.4rem;
+    font-size: 0.7rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+}
+
+.banner-editor-secondary {
+    border: 1px solid var(--border-medium);
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.banner-editor-primary {
+    border: 1px solid var(--link-hover);
+    background: var(--link-hover);
+    color: var(--bg);
+}
+
+.banner-editor-secondary:hover,
+.banner-editor-primary:hover {
+    opacity: 0.85;
+}
+
+@media (max-width: 639px) {
+    .banner-editor {
+        padding: 0.75rem;
+    }
+
+    .banner-editor-card {
+        padding: 1rem;
+    }
+
+    .banner-editor-stage {
+        aspect-ratio: 5 / 1;
+    }
+
+    .banner-editor-actions {
+        justify-content: stretch;
+    }
+
+    .banner-editor-secondary,
+    .banner-editor-primary {
+        flex: 1;
+    }
+}

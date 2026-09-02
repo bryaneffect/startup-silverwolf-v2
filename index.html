@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Home. · Stay Awake</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link rel="stylesheet" href="./style.css?v=7">
+</head>
+
+<body class="bg-[var(--bg)] text-[var(--text-primary)] overflow-x-hidden flex justify-center items-center min-h-dvh w-full perspective-wrapper">
+
+    <!-- Shader background (animated halftone) -->
+    <canvas id="shader-bg" class="fixed inset-0 z-[-2] pointer-events-none block w-full h-full"></canvas>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SETTINGS PANEL
+    ═══════════════════════════════════════════════════════════ -->
+    <div id="settings-panel"
+        class="absolute w-full sm:w-[720px] h-full max-h-[90%] sm:max-h-[85%] transition translate-y-[-100%] rotate-[-100deg] scale-[0.01] opacity-0 z-[10] max-w-[720px] mx-auto px-6 sm:px-8 py-6 sm:py-8 rounded-xl shadow-lg settings-shell">
+
+        <!-- Settings home/menu -->
+        <div id="settings-home" class="settings-view settings-home-view is-active">
+            <div class="flex justify-between items-center mb-8 sm:mb-10">
+                <button onclick="toggleSettings();"
+                    class="menu-btn w-auto inline-flex border border-[var(--border-medium)] px-3 py-1 hover:pl-7 items-center gap-2 text-xs font-mono cursor-pointer text-[var(--text-muted)] hover:text-[var(--link-hover)] hover:border-[var(--link-hover)]">
+                    <span>BACK</span>
+                </button>
+                <span class="text-xs uppercase tracking-widest text-[var(--text-muted)] font-mono">Settings</span>
+            </div>
+
+            <div class="settings-menu-list">
+                <button type="button" class="settings-menu-item" data-settings-view="banner">
+                    <span>Banner Image</span>
+                    <span class="settings-menu-arrow">→</span>
+                </button>
+
+                <button type="button" class="settings-menu-item" data-settings-view="bookmarks">
+                    <span>Bookmarks</span>
+                    <span class="settings-menu-arrow">→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Banner Image sub-menu -->
+        <section id="settings-banner" class="settings-view settings-subview">
+            <div class="settings-subheader">
+                <button type="button" class="settings-back-sub" data-settings-back>← BACK</button>
+                <span>BANNER IMAGE</span>
+            </div>
+
+            <div class="settings-content">
+                <h2 class="settings-heading">Banner Image</h2>
+
+                <div class="w-full h-16 sm:h-20 overflow-hidden bg-[var(--code-bg)] mb-3 rounded-md glass">
+                    <img id="banner-preview" src="" alt="Preview" class="w-full h-full object-cover">
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="banner-url-input" placeholder="Tempel URL gambar…"
+                        class="flex-1 bg-[var(--code-bg)] border border-[var(--code-border)] rounded-md px-3 py-2 text-sm outline-none text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--link-hover)]">
+                    <button id="banner-url-apply" type="button"
+                        class="shrink-0 border border-[var(--border-medium)] px-4 py-2 rounded-md text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--link-hover)] hover:border-[var(--link-hover)] cursor-pointer">Terapkan</button>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 mt-3">
+                    <label class="inline-flex items-center gap-2 text-xs font-mono text-[var(--text-muted)] cursor-pointer">
+                        <input type="file" id="banner-file-input" accept="image/*" class="hidden">
+                        <span class="border border-[var(--border-medium)] px-3 py-1.5 rounded-md hover:border-[var(--link-hover)] hover:text-[var(--link-hover)]">Upload dari perangkat</span>
+                    </label>
+
+                    <button id="banner-reset" type="button"
+                        class="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--link-hover)] cursor-pointer underline decoration-[var(--border-medium)]">Reset</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bookmarks sub-menu -->
+        <section id="settings-bookmarks" class="settings-view settings-subview">
+            <div class="settings-subheader">
+                <button type="button" class="settings-back-sub" data-settings-back>← BACK</button>
+                <span>BOOKMARKS</span>
+            </div>
+
+            <div class="settings-content">
+                <div class="flex items-center justify-between mb-4 sm:mb-5">
+                    <h2 class="settings-heading heading-inline">Bookmarks</h2>
+                    <button id="bookmark-add" type="button"
+                        class="shrink-0 text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--link-hover)] cursor-pointer border border-[var(--border-medium)] px-3 py-1 rounded-md hover:border-[var(--link-hover)]">+ Tambah</button>
+                </div>
+                <div id="bookmark-list" class="flex flex-col gap-2"></div>
+                <div id="bookmark-empty" class="text-xs text-[var(--text-muted)] font-mono py-2 hidden">
+                    Belum ada bookmark. Klik "+ Tambah" untuk menyimpan link.
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         MAIN CARD
+    ═══════════════════════════════════════════════════════════ -->
+    <div id="main-content"
+        class="w-full max-w-[720px] mx-auto px-5 sm:px-8 py-6 sm:py-8 z-[5] rounded-xl shadow-lg bg-darkslide">
+
+        <!-- Top bar -->
+        <div class="flex justify-between items-center mb-6 sm:mb-8 gap-2">
+            <button id="settings-toggle" type="button" aria-label="Settings"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-[var(--border-medium)] text-[var(--text-muted)] hover:text-[var(--link-hover)] hover:border-[var(--link-hover)] cursor-pointer transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z">
+                    </path>
+                </svg>
+            </button>
+
+            <button id="theme-toggle"
+                class="inline-flex shrink-0 items-center gap-2 text-xs font-mono cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-secondary)]">
+                <span class="relative inline-block w-10 h-5 bg-[var(--border-medium)] rounded-full">
+                    <span id="theme-thumb"
+                        class="absolute top-0.5 left-0.5 w-4 h-4 bg-[var(--bg)] rounded-full transition-all duration-150"></span>
+                </span>
+                <span>dark / light</span>
+            </button>
+        </div>
+
+        <!-- Breadcrumb -->
+        <div class="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-6 sm:mb-8 font-normal">
+            BRYANEFFECT / STAY AWAKE
+        </div>
+
+        <!-- Wide image banner (sharp corners, no border) -->
+        <div class="w-full h-16 sm:h-24 rounded-none overflow-hidden bg-[var(--code-bg)] mb-6 sm:mb-8 glass">
+            <img id="banner-img" src="icon.png" alt="Banner" class="w-full h-full object-cover"
+                onerror="this.style.display='none'; document.getElementById('banner-placeholder').style.display='flex';">
+            <div id="banner-placeholder"
+                class="w-full h-full hidden items-center justify-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)]">
+                Letakkan gambar di sini
+            </div>
+        </div>
+
+        <div class="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-6 sm:mb-8 font-normal">
+            SILVERWOLF HERE.
+        </div>
+
+        <!-- Greeting -->
+        <div id="greeting" class="text-3xl sm:text-4xl font-medium tracking-tight pb-3">
+            Selamat datang
+        </div>
+
+        <div class="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-6 sm:mb-8 font-normal">
+            need something? just search it.
+        </div>
+
+        <!-- Search bar -->
+        <form id="search-form" class="relative mb-4" autocomplete="off">
+            <div id="search-box"
+                class="tile-3d flex items-center gap-3 bg-[var(--code-bg)] border border-[var(--code-border)] rounded-md px-4 py-3 focus-within:border-[var(--link-hover)]">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="search-input" placeholder="Cari sesuatu…" autocomplete="off"
+                    class="flex-1 bg-transparent outline-none text-sm sm:text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)]">
+            </div>
+
+            <!-- Live suggestion dropdown -->
+            <div id="suggestions"
+                class="hidden absolute left-0 right-0 mt-2 bg-[var(--code-bg)] border border-[var(--code-border)] rounded-md overflow-hidden shadow-lg z-20">
+            </div>
+        </form>
+
+        <!-- Quick links (from saved bookmarks) -->
+        <div id="quicklinks" class="hidden flex-wrap gap-2 mb-6 sm:mb-8"></div>
+
+        <!-- Sub caption (date/time) -->
+        <div id="datetime"
+            class="text-sm sm:text-base text-[var(--text-secondary)] mb-4 font-normal border-l-2 border-[var(--border-medium)] pl-4">
+        </div>
+
+        <!-- Social icons -->
+        <div class="flex justify-center items-center gap-5 sm:gap-6 mb-6 sm:mb-8">
+            <a href="https://github.com/bryaneffect" target="_blank" rel="noopener" aria-label="GitHub"
+                class="text-[var(--text-muted)] hover:text-[var(--link-hover)] transition-colors">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.535-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z">
+                    </path>
+                </svg>
+            </a>
+
+            <a href="https://instagram.com/bryannfx.os" target="_blank" rel="noopener" aria-label="Instagram"
+                class="text-[var(--text-muted)] hover:text-[var(--link-hover)] transition-colors">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8">
+                    <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle>
+                </svg>
+            </a>
+
+            <a href="https://tiktok.com/@bryann_fx" target="_blank" rel="noopener" aria-label="TikTok"
+                class="text-[var(--text-muted)] hover:text-[var(--link-hover)] transition-colors">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M16.5 3c.3 1.8 1.5 3.2 3.3 3.6v2.6c-1.2 0-2.3-.4-3.3-1v6.6c0 3.1-2.5 5.2-5.4 5.2-1.5 0-2.9-.6-3.9-1.7-1.6-1.7-1.9-4.4-.5-6.4 1.1-1.6 3-2.4 4.9-2.1v2.7c-.4-.1-.9-.2-1.4-.1-1.1.2-1.9 1.1-2 2.2-.1 1.3.9 2.4 2.1 2.5 1.2.1 2.3-.8 2.4-2V3h3.8z">
+                    </path>
+                </svg>
+            </a>
+
+            <a href="https://web.whatsapp.com/" target="_blank" rel="noopener" aria-label="WhatsApp"
+                class="text-[var(--text-muted)] hover:text-[var(--link-hover)] transition-colors">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm5.71 14.02c-.24.68-1.4 1.32-1.93 1.4-.5.08-1.11.11-1.79-.11-.41-.13-.94-.31-1.62-.6-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.54-1.16-2.94s.72-2.09.98-2.37c.26-.28.57-.35.76-.35h.55c.18 0 .42-.02.65.5.24.53.82 1.85.89 1.98.07.14.12.3.02.49-.09.19-.14.31-.28.48-.14.16-.29.36-.42.48-.14.14-.28.28-.12.55.16.28.7 1.16 1.51 1.88 1.04.93 1.92 1.22 2.19 1.36.28.14.44.12.6-.07.16-.19.68-.79.86-1.06.18-.28.36-.23.6-.14.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.62-.18 1.3z">
+                    </path>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Footer ticker -->
+        <div class="w-full overflow-hidden text-[var(--link-hover)]">
+            <div class="track-horizontal w-full inline-flex gap-6 items-center justify-around text-xs px-3 py-1">
+                <span>Homepage by @exphert</span>
+                <span>Edited by @bryaneffect</span>
+                <span>Hosted by @intsomnia.arc</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCRIPTS
+    ═══════════════════════════════════════════════════════════ -->
+    <script>
+        // Theme init
+        document.documentElement.classList.add('dark');
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        }
+
+        const thumb = document.getElementById('theme-thumb');
+        function updateThumb() {
+            if (thumb) {
+                thumb.style.transform = document.documentElement.classList.contains('dark')
+                    ? 'translateX(20px)'
+                    : 'translateX(0)';
+            }
+        }
+        updateThumb();
+
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            updateThumb();
+            // Tell the shader to re-read the theme
+            if (typeof updateShaderTheme === 'function') updateShaderTheme();
+        });
+
+        // ─── Settings panel toggle ───
+        function toggleSettings() {
+            document.getElementById('settings-panel').classList.toggle('show-menu');
+        }
+        document.getElementById('settings-toggle').addEventListener('click', toggleSettings);
+
+        // ─── Settings menu / sub-pages ───────────────────────────────
+        const settingsViews = document.querySelectorAll('.settings-view');
+        const settingsHome = document.getElementById('settings-home');
+
+        function openSettingsView(name) {
+            settingsViews.forEach(view => view.classList.remove('is-active', 'is-leaving'));
+            const target = document.getElementById(`settings-${name}`);
+            if (!target) return;
+            settingsHome.classList.remove('is-active');
+            target.classList.remove('is-leaving');
+            requestAnimationFrame(() => target.classList.add('is-active'));
+        }
+
+        function closeSettingsView() {
+            const active = document.querySelector('.settings-subview.is-active');
+            if (active) {
+                active.classList.remove('is-active');
+                active.classList.add('is-leaving');
+                setTimeout(() => active.classList.remove('is-leaving'), 520);
+            }
+            settingsHome.classList.remove('is-leaving');
+            requestAnimationFrame(() => settingsHome.classList.add('is-active'));
+        }
+
+        document.querySelectorAll('[data-settings-view]').forEach(button => {
+            button.addEventListener('click', () => openSettingsView(button.dataset.settingsView));
+        });
+
+        document.querySelectorAll('[data-settings-back]').forEach(button => {
+            button.addEventListener('click', closeSettingsView);
+        });
+
+        // Scroll lock while settings panel is open
+        (function () {
+            const panel = document.getElementById('settings-panel');
+            function checkBodyScroll() {
+                document.body.style.overflow = panel.classList.contains('show-menu') ? 'hidden' : '';
+            }
+            new MutationObserver(checkBodyScroll).observe(panel, { attributes: true, attributeFilter: ['class'] });
+        })();
+
+        // Greeting based on time of day
+        const USER_NAME = "Bryan";
+
+        function updateGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greeting;
+
+            if (hour >= 4 && hour < 11) {
+                greeting = "Selamat pagi";
+            } else if (hour >= 11 && hour < 15) {
+                greeting = "Selamat siang";
+            } else if (hour >= 15 && hour < 19) {
+                greeting = "Selamat sore";
+            } else {
+                greeting = "Selamat malam";
+            }
+
+            document.getElementById('greeting').textContent = `${greeting}, ${USER_NAME}.`;
+
+            const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('datetime').textContent = `${dateStr} · ${timeStr}`;
+        }
+
+        updateGreeting();
+        setInterval(updateGreeting, 30000);
+
+        // ─── Live search suggestions ──────────────────────────────────
+        const searchInput = document.getElementById('search-input');
+        const suggestionsBox = document.getElementById('suggestions');
+        let debounceTimer = null;
+        let activeIndex = -1;
+
+        function goToSearch(query) {
+            if (!query) return;
+            window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        }
+
+        function hideSuggestions() {
+            suggestionsBox.classList.add('hidden');
+            suggestionsBox.innerHTML = '';
+            activeIndex = -1;
+        }
+
+        function renderSuggestions(items) {
+            suggestionsBox.innerHTML = '';
+            if (!items.length) { hideSuggestions(); return; }
+            items.forEach((text) => {
+                const row = document.createElement('div');
+                row.className = 'suggestion-item flex items-center gap-3 px-4 py-2 text-sm cursor-pointer text-[var(--text-secondary)] hover:bg-[var(--border-light)] hover:text-[var(--text-primary)]';
+                const icon = document.createElement('span');
+                icon.innerHTML = `<svg class="w-3.5 h-3.5 shrink-0 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+                const label = document.createElement('span');
+                label.textContent = text;
+                row.appendChild(icon);
+                row.appendChild(label);
+                row.addEventListener('click', () => { searchInput.value = text; hideSuggestions(); goToSearch(text); });
+                suggestionsBox.appendChild(row);
+            });
+            suggestionsBox.classList.remove('hidden');
+        }
+
+        async function fetchSuggestions(query) {
+            try {
+                const url = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&limit=8&namespace=0&search=${encodeURIComponent(query)}&origin=*`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('bad response');
+                const data = await res.json();
+                const titles = Array.isArray(data) && Array.isArray(data[1]) ? data[1] : [];
+                renderSuggestions(titles);
+            } catch (err) { hideSuggestions(); }
+        }
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim();
+            clearTimeout(debounceTimer);
+            if (!query) { hideSuggestions(); return; }
+            debounceTimer = setTimeout(() => fetchSuggestions(query), 200);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            const items = suggestionsBox.querySelectorAll('.suggestion-item');
+            if (!items.length) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; }
+            else return;
+            items.forEach((el, i) => {
+                el.classList.toggle('bg-[var(--border-light)]', i === activeIndex);
+                el.classList.toggle('text-[var(--text-primary)]', i === activeIndex);
+            });
+            searchInput.value = items[activeIndex].querySelector('span:last-child').textContent;
+        });
+
+        document.addEventListener('click', (e) => { if (!e.target.closest('#search-form')) hideSuggestions(); });
+        document.getElementById('search-form').addEventListener('submit', (e) => { e.preventDefault(); goToSearch(searchInput.value.trim()); });
+
+        // ─── Banner image ─────────────────────────────────────────────
+        const bannerImg = document.getElementById('banner-img');
+        const bannerPlaceholder = document.getElementById('banner-placeholder');
+        const bannerPreview = document.getElementById('banner-preview');
+        const bannerUrlInput = document.getElementById('banner-url-input');
+        const bannerFileInput = document.getElementById('banner-file-input');
+        const bannerResetBtn = document.getElementById('banner-reset');
+        const DEFAULT_BANNER = 'icon.png';
+
+        function setBannerImage(src, persist = true) {
+            bannerImg.src = src;
+            bannerImg.style.display = '';
+            bannerPlaceholder.style.display = 'none';
+            bannerPreview.src = src;
+            if (persist) localStorage.setItem('bannerImage', src);
+        }
+
+        const savedBanner = localStorage.getItem('bannerImage');
+        if (savedBanner) { setBannerImage(savedBanner, false); } else { bannerPreview.src = DEFAULT_BANNER; }
+
+        bannerUrlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); bannerUrlInput.blur(); document.getElementById('banner-url-apply').click(); } });
+        document.getElementById('banner-url-apply').addEventListener('click', () => { const val = bannerUrlInput.value.trim(); if (val) setBannerImage(val); });
+        bannerFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => setBannerImage(ev.target.result); reader.readAsDataURL(file); });
+        bannerResetBtn.addEventListener('click', () => { localStorage.removeItem('bannerImage'); bannerUrlInput.value = ''; setBannerImage(DEFAULT_BANNER, false); });
+
+        // ─── Bookmarks ────────────────────────────────────────────────
+        let bookmarks = [];
+        try { bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]'); } catch (err) { bookmarks = []; }
+
+        function saveBookmarks() { localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); renderQuickLinks(); }
+
+        function renderBookmarkList() {
+            const list = document.getElementById('bookmark-list');
+            const emptyMsg = document.getElementById('bookmark-empty');
+            list.innerHTML = '';
+            if (!bookmarks.length) { emptyMsg.classList.remove('hidden'); return; }
+            emptyMsg.classList.add('hidden');
+            bookmarks.forEach((bm, i) => {
+                const row = document.createElement('div');
+                row.className = 'bookmark-row flex items-center gap-2 bg-[var(--code-bg)] border border-[var(--code-border)] rounded-md px-3 py-2';
+                const rowIcon = document.createElement('span');
+                rowIcon.className = 'shrink-0 text-[var(--text-muted)]';
+                rowIcon.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.07 0l1.93-1.93a5 5 0 00-7.07-7.07L10.5 5.5"></path><path d="M14 11a5 5 0 00-7.07 0L5 12.93a5 5 0 007.07 7.07L13.5 18.5"></path></svg>`;
+                row.appendChild(rowIcon);
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text'; nameInput.value = bm.name || ''; nameInput.placeholder = 'Nama';
+                nameInput.className = 'w-1/3 bg-transparent outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]';
+                nameInput.addEventListener('input', () => { bookmarks[i].name = nameInput.value; saveBookmarks(); });
+                const urlInput = document.createElement('input');
+                urlInput.type = 'text'; urlInput.value = bm.url || ''; urlInput.placeholder = 'https://…';
+                urlInput.className = 'flex-1 bg-transparent outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]';
+                urlInput.addEventListener('input', () => { bookmarks[i].url = urlInput.value; saveBookmarks(); });
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button'; delBtn.textContent = '✕'; delBtn.setAttribute('aria-label', 'Hapus bookmark');
+                delBtn.className = 'text-[var(--text-muted)] hover:text-[var(--link-hover)] cursor-pointer shrink-0';
+                delBtn.addEventListener('click', () => { bookmarks.splice(i, 1); saveBookmarks(); renderBookmarkList(); });
+                row.appendChild(nameInput); row.appendChild(urlInput); row.appendChild(delBtn);
+                list.appendChild(row);
+            });
+        }
+
+        document.getElementById('bookmark-add').addEventListener('click', () => { bookmarks.push({ name: '', url: '' }); saveBookmarks(); renderBookmarkList(); });
+
+        function renderQuickLinks() {
+            const container = document.getElementById('quicklinks');
+            container.innerHTML = '';
+            const valid = bookmarks.filter(b => b.url && b.url.trim());
+            if (!valid.length) { container.classList.add('hidden'); container.classList.remove('flex'); return; }
+            container.classList.remove('hidden'); container.classList.add('flex');
+            valid.forEach(b => {
+                const url = b.url.trim();
+                const a = document.createElement('a');
+                a.href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+                a.target = '_blank'; a.rel = 'noopener';
+                a.textContent = (b.name && b.name.trim()) || url;
+                a.className = 'text-xs font-mono px-3 py-1.5 rounded-md border border-[var(--border-medium)] text-[var(--text-muted)] hover:text-[var(--link-hover)] hover:border-[var(--link-hover)] transition-colors';
+                container.appendChild(a);
+            });
+        }
+
+        renderBookmarkList();
+        renderQuickLinks();
+
+        // ─── Shader background ────────────────────────────────────────
+        // Palette toggles between dark (near-black purple) and light (lavender/white)
+        // when the user switches theme.
+        (function initShaderBackground() {
+            const canvas = document.getElementById('shader-bg');
+            if (!canvas) return;
+            const gl = canvas.getContext('webgl', { antialias: false });
+            if (!gl) return;
+
+            const VERT = `attribute vec2 a_position;
+void main() {
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+
+            const FRAG = `#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+
+uniform vec3 u_colors[8];
+uniform vec4 u_scene;
+uniform vec4 u_shape;
+uniform vec4 u_surface;
+uniform vec4 u_finish;
+uniform vec4 u_transform;
+uniform vec4 u_space;
+uniform vec4 u_cursor;
+
+#define u_resolution u_scene.xy
+#define u_time u_scene.z
+#define u_colorCount u_scene.w
+#define u_scale u_shape.x
+#define u_intensity u_shape.y
+#define u_paramA u_shape.z
+#define u_warp u_shape.w
+#define u_detail u_surface.x
+#define u_contrast u_surface.y
+#define u_brightness u_surface.z
+#define u_saturation u_surface.w
+#define u_hue u_finish.x
+#define u_vignette u_finish.y
+#define u_blur u_finish.z
+#define u_grain u_finish.w
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+#define u_seed u_transform.x
+#else
+#define u_seed mod(u_transform.x, 31.0)
+#endif
+#define u_rotate u_transform.y
+#define u_drift u_transform.z
+#define u_oklab u_transform.w
+#define u_offset u_space.xy
+#define u_mouse u_space.zw
+#define u_cursorPresence u_cursor.x
+#define u_cursorEffect u_cursor.y
+#define u_cursorStrength u_cursor.z
+#define u_cursorRadius u_cursor.w
+
+float hash21(vec2 p) {
+#ifndef GL_FRAGMENT_PRECISION_HIGH
+  p = mod(p, 31.0);
+#endif
+  p = fract(p * vec2(234.34, 435.345));
+  p += dot(p, p + 34.23);
+  return fract(p.x * p.y);
+}
+
+float grainHash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash21(i), hash21(i + vec2(1.0, 0.0)), u.x),
+    mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), u.x),
+    u.y);
+}
+
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 5; i++) {
+    v += a * noise(p);
+    p = p * 2.03 + vec2(17.0, 9.2);
+    a *= 0.5;
+  }
+  return v;
+}
+
+vec3 srgbToLinear(vec3 c) {
+  return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
+}
+vec3 linearToSrgb(vec3 c) {
+  return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+}
+vec3 linToOklab(vec3 c) {
+  float l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b;
+  float m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b;
+  float s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b;
+  l = pow(max(l, 0.0), 1.0 / 3.0); m = pow(max(m, 0.0), 1.0 / 3.0); s = pow(max(s, 0.0), 1.0 / 3.0);
+  return vec3(0.2104542553*l+0.7936177850*m-0.0040720468*s, 1.9779984951*l-2.4285922050*m+0.4505937099*s, 0.0259040371*l+0.7827717662*m-0.8086757660*s);
+}
+vec3 oklabToLin(vec3 c) {
+  float l = c.x+0.3963377774*c.y+0.2158037573*c.z;
+  float m = c.x-0.1055613458*c.y-0.0638541728*c.z;
+  float s = c.x-0.0894841775*c.y-1.2914855480*c.z;
+  l=l*l*l; m=m*m*m; s=s*s*s;
+  return vec3(4.0767416621*l-3.3077115913*m+0.2309699292*s, -1.2684380046*l+2.6097574011*m-0.3413193965*s, -0.0041960863*l-0.7034186147*m+1.7076147010*s);
+}
+vec3 mixColour(vec3 a, vec3 b, float t) {
+  if (u_oklab > 0.5) {
+    vec3 la = linToOklab(srgbToLinear(a));
+    vec3 lb = linToOklab(srgbToLinear(b));
+    return clamp(linearToSrgb(oklabToLin(mix(la,lb,t))),0.0,1.0);
+  }
+  return mix(a, b, t);
+}
+
+vec3 palette(float x) {
+  float n = max(u_colorCount - 1.0, 1.0);
+  float f = clamp(x, 0.0, 1.0) * n;
+  vec3 col = u_colors[0];
+  for (int i = 0; i < 7; i++) {
+    if (float(i) < n)
+      col = mixColour(col, u_colors[i+1], smoothstep(0.0,1.0,clamp(f-float(i),0.0,1.0)));
+  }
+  return col;
+}
+
+vec3 hueRotate(vec3 col, float a) {
+  const mat3 toYIQ = mat3(0.299,0.596,0.211,0.587,-0.274,-0.523,0.114,-0.322,0.312);
+  const mat3 toRGB = mat3(1.0,1.0,1.0,0.956,-0.272,-1.106,0.621,-0.647,1.703);
+  vec3 yiq = toYIQ * col;
+  float ca = cos(a), sa = sin(a);
+  yiq = vec3(yiq.x, yiq.y*ca-yiq.z*sa, yiq.y*sa+yiq.z*ca);
+  return toRGB * yiq;
+}
+
+vec3 shade(vec2 uv, vec2 p, float t) {
+  float cells = 18.0 + u_intensity * 30.0;
+  vec2 f = fract(p * cells) - 0.5;
+  float field = 0.5 + 0.5 * sin(p.x*3.0+t+u_seed)*sin(p.y*2.4-t*0.7);
+  float r = (0.06 + u_paramA*0.34) + field*0.2;
+  float dotMask = 1.0 - smoothstep(r-0.08, r, length(f));
+  return mix(u_colors[0], palette(field), dotMask);
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  vec2 screenUv = uv;
+  vec2 p = (gl_FragCoord.xy - 0.5*u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+  float cursorMask = 0.0;
+
+  if (u_cursorPresence > 0.001) {
+    vec2 cursor = (0.5*u_mouse*u_resolution.xy)/min(u_resolution.x, u_resolution.y);
+    vec2 cursorDelta = p - cursor;
+    if (u_cursorEffect < 0.5) {
+      p += cursor * u_cursorPresence * u_cursorStrength * 0.55;
+    } else {
+      float cursorDistance = length(cursorDelta);
+      vec2 cursorDirection = cursorDelta / max(cursorDistance, 0.0001);
+      cursorMask = u_cursorPresence*(1.0-smoothstep(0.0, u_cursorRadius, cursorDistance));
+      if (u_cursorEffect < 1.5) {
+        p -= cursorDirection * cursorMask * u_cursorStrength * 0.24;
+      } else if (u_cursorEffect < 2.5) {
+        float cursorAngle = cursorMask * u_cursorStrength * 2.2;
+        float cc = cos(cursorAngle), cs = sin(cursorAngle);
+        p = cursor + mat2(cc,-cs,cs,cc)*cursorDelta;
+      } else if (u_cursorEffect < 3.5) {
+        float ripple = sin(cursorDistance/max(u_cursorRadius,0.001)*18.0-u_time*5.0);
+        p -= cursorDirection*ripple*cursorMask*u_cursorStrength*0.07;
+      }
+    }
+  }
+
+  uv = p*min(u_resolution.x,u_resolution.y)/u_resolution.xy+0.5;
+  p *= u_scale;
+  if (abs(u_rotate) > 0.0001) { float cr=cos(u_rotate),sr=sin(u_rotate); p=mat2(cr,-sr,sr,cr)*p; }
+  p += u_offset;
+  if (u_drift > 0.0001) p += u_drift*vec2(sin(u_time*0.31),cos(u_time*0.23));
+  if (u_warp > 0.0) { p += u_warp*(vec2(fbm(p*u_detail+u_seed),fbm(p*u_detail+vec2(5.2,1.3)))-0.5); }
+
+  vec3 col;
+  if (u_blur > 0.0) {
+    float e = u_blur;
+    float pe = e*u_scale;
+    vec2 uvE = vec2(e)*min(u_resolution.x,u_resolution.y)/u_resolution.xy;
+    col  = shade(uv, p, u_time)*0.36;
+    col += shade(uv+vec2(uvE.x,0.0), p+vec2(pe,0.0), u_time)*0.16;
+    col += shade(uv-vec2(uvE.x,0.0), p-vec2(pe,0.0), u_time)*0.16;
+    col += shade(uv+vec2(0.0,uvE.y), p+vec2(0.0,pe), u_time)*0.16;
+    col += shade(uv-vec2(0.0,uvE.y), p-vec2(0.0,pe), u_time)*0.16;
+  } else {
+    col = shade(uv, p, u_time);
+  }
+  if (abs(u_contrast-1.0)>0.0001) col=(col-0.5)*u_contrast+0.5;
+  if (abs(u_saturation-1.0)>0.0001) { float luma=dot(col,vec3(0.299,0.587,0.114)); col=mix(vec3(luma),col,u_saturation); }
+  if (abs(u_hue)>0.0001) col=hueRotate(col,u_hue);
+  if (abs(u_brightness)>0.0001) col+=u_brightness;
+  if (u_vignette>0.0001) { float vd=length(screenUv-0.5)*1.41421356; col*=1.0-u_vignette*smoothstep(0.35,1.0,vd); }
+  if (u_cursorPresence>0.001&&u_cursorEffect>3.5) col+=(vec3(0.18)+col*0.12)*cursorMask*u_cursorStrength;
+  if (u_grain>0.0001) col+=(grainHash(gl_FragCoord.xy+vec2(u_seed*17.0,u_seed*31.0))-0.5)*u_grain;
+  gl_FragColor = vec4(clamp(col,0.0,1.0),1.0);
+}
+`;
+
+            // ─── Palettes per theme ───────────────────────────────────
+            // DARK: near-black, deep purple — even darker than before
+            const DARK_PALETTE = {
+                colors: [
+                    [0.008, 0.004, 0.016],   // #020104 near-black
+                    [0.020, 0.010, 0.040],   // #050a0a deep
+                    [0.055, 0.027, 0.090],   // #0e0717
+                    [0.110, 0.063, 0.180],   // #1c102e
+                    [0.220, 0.140, 0.360],   // #38245c
+                    [0.290, 0.200, 0.420],   // #4a3369
+                    [0.540, 0.390, 0.820],   // #8a63d1
+                    [0.540, 0.390, 0.820],
+                ],
+                contrast: 0.550,
+                brightness: -0.380,
+                saturation: 2.200,
+                vignette: 1.100,
+            };
+
+            // LIGHT: soft lavender/white — pastel purple tones
+            const LIGHT_PALETTE = {
+                colors: [
+                    [0.929, 0.878, 1.000],   // #ede0ff
+                    [0.878, 0.816, 0.980],   // #e0d0fa
+                    [0.820, 0.741, 0.960],   // #d1bdf5
+                    [0.753, 0.651, 0.941],   // #c0a6f0
+                    [0.639, 0.518, 0.882],   // #a384e1
+                    [0.529, 0.380, 0.800],   // #8761cc
+                    [0.388, 0.247, 0.659],   // #633fa8
+                    [0.388, 0.247, 0.659],
+                ],
+                contrast: 0.700,
+                brightness: 0.050,
+                saturation: 1.400,
+                vignette: 0.600,
+            };
+
+            const SHARED = {
+                colorCount: 7,
+                scale: 1.780,
+                intensity: 0.190,
+                paramA: 1.000,
+                warp: 0.000,
+                detail: 4.000,
+                hue: 0.0000,
+                blur: 0.0400,
+                grain: 0.100,
+                seed: 4990.0,
+                rotate: 2.9845,
+                offsetX: -0.250,
+                offsetY: -0.020,
+                drift: 0.136,
+                cursorEnabled: true,
+                cursorEffect: 2.0,
+                cursorStrength: 0.150,
+                cursorRadius: 0.569,
+                oklab: 0.0,
+                timeScale: -0.518,
+            };
+
+            function isDark() {
+                return document.documentElement.classList.contains('dark');
+            }
+
+            const compile = (type, src) => {
+                const s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                return s;
+            };
+            const program = gl.createProgram();
+            gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
+            gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
+            gl.linkProgram(program);
+            gl.useProgram(program);
+
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,3,-1,-1,3]), gl.STATIC_DRAW);
+            const loc = gl.getAttribLocation(program, 'a_position');
+            gl.enableVertexAttribArray(loc);
+            gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+            const uni = {
+                colors: gl.getUniformLocation(program, 'u_colors'),
+                scene:  gl.getUniformLocation(program, 'u_scene'),
+                shape:  gl.getUniformLocation(program, 'u_shape'),
+                surface:gl.getUniformLocation(program, 'u_surface'),
+                finish: gl.getUniformLocation(program, 'u_finish'),
+                transform: gl.getUniformLocation(program, 'u_transform'),
+                space:  gl.getUniformLocation(program, 'u_space'),
+                cursor: gl.getUniformLocation(program, 'u_cursor'),
+            };
+
+            // Apply the palette-dependent uniforms
+            function applyPalette() {
+                const P = isDark() ? DARK_PALETTE : LIGHT_PALETTE;
+                gl.uniform3fv(uni.colors, new Float32Array(P.colors.flat()));
+                gl.uniform4f(uni.surface, SHARED.detail, P.contrast, P.brightness, P.saturation);
+                gl.uniform4f(uni.finish,  SHARED.hue, P.vignette, SHARED.blur, SHARED.grain);
+            }
+
+            // Apply the palette-independent uniforms (set once)
+            gl.uniform4f(uni.shape,    SHARED.scale, SHARED.intensity, SHARED.paramA, SHARED.warp);
+            gl.uniform4f(uni.transform,SHARED.seed,  SHARED.rotate,    SHARED.drift,  SHARED.oklab);
+            gl.uniform4f(uni.cursor,   0, SHARED.cursorEffect, SHARED.cursorStrength, SHARED.cursorRadius);
+            applyPalette();
+
+            // Expose so the theme toggle button can call this
+            window.updateShaderTheme = function() {
+                applyPalette();
+                requestRender();
+            };
+
+            let targetX = 0, targetY = 0, targetPresence = 0;
+            let mouseX = 0, mouseY = 0, cursorPresence = 0;
+            let pointerKnown = false, pointerClientX = 0, pointerClientY = 0;
+            let bounds = canvas.getBoundingClientRect();
+            let raf = 0, lastNow = null;
+            let visible = document.visibilityState === 'visible';
+            let inView = true;
+            const start = performance.now();
+            const timeAnimated = Math.abs(SHARED.timeScale) > 0.0001;
+
+            function resizeCanvas() {
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                const rawWidth  = Math.max(1, Math.round(bounds.width  * dpr));
+                const rawHeight = Math.max(1, Math.round(bounds.height * dpr));
+                const pixelScale = Math.min(1, Math.sqrt(2000000 / Math.max(1, rawWidth * rawHeight)));
+                const width  = Math.max(1, Math.round(rawWidth  * pixelScale));
+                const height = Math.max(1, Math.round(rawHeight * pixelScale));
+                if (canvas.width !== width || canvas.height !== height) {
+                    canvas.width = width; canvas.height = height;
+                    gl.viewport(0, 0, width, height);
+                }
+            }
+
+            function requestRender() {
+                if (visible && inView && raf === 0) raf = requestAnimationFrame(render);
+            }
+
+            function updatePointerTarget() {
+                if (!pointerKnown) return;
+                if (bounds.width === 0 || bounds.height === 0) return;
+                const inside = pointerClientX >= bounds.left && pointerClientX <= bounds.right &&
+                               pointerClientY >= bounds.top  && pointerClientY <= bounds.bottom;
+                if (!inside) { targetPresence = 0; requestRender(); return; }
+                const nextX = ((pointerClientX - bounds.left) / bounds.width)  * 2 - 1;
+                const nextY = -(((pointerClientY - bounds.top)  / bounds.height) * 2 - 1);
+                if (targetPresence === 0 && cursorPresence < 0.01) { mouseX = nextX; mouseY = nextY; }
+                targetX = nextX; targetY = nextY; targetPresence = 1;
+                requestRender();
+            }
+
+            function onPointerMove(e) { pointerKnown = true; pointerClientX = e.clientX; pointerClientY = e.clientY; bounds = canvas.getBoundingClientRect(); updatePointerTarget(); }
+            function onPointerLeave() { pointerKnown = false; targetPresence = 0; requestRender(); }
+            function updateLayout() { bounds = canvas.getBoundingClientRect(); resizeCanvas(); updatePointerTarget(); requestRender(); }
+
+            window.addEventListener('resize', updateLayout);
+            if (SHARED.cursorEnabled) {
+                window.addEventListener('pointermove', onPointerMove, { passive: true });
+                window.addEventListener('pointercancel', onPointerLeave);
+                window.addEventListener('scroll', updateLayout, true);
+                window.addEventListener('blur', onPointerLeave);
+                document.documentElement.addEventListener('pointerleave', onPointerLeave);
+            }
+
+            new ResizeObserver(updateLayout).observe(canvas);
+            new IntersectionObserver(([entry]) => {
+                inView = entry ? entry.isIntersecting : true;
+                if (inView) requestRender();
+                else if (raf !== 0) { cancelAnimationFrame(raf); raf = 0; lastNow = null; }
+            }).observe(canvas);
+
+            document.addEventListener('visibilitychange', () => {
+                visible = document.visibilityState === 'visible';
+                if (visible) requestRender();
+                else if (raf !== 0) { cancelAnimationFrame(raf); raf = 0; lastNow = null; }
+            });
+
+            function render(now) {
+                raf = 0;
+                if (!visible || !inView) return;
+                const dt = lastNow === null ? 0 : Math.min((now - lastNow) / 1000, 0.1);
+                lastNow = now;
+                const follow = 1 - Math.exp(-12 * dt);
+                mouseX += (targetX - mouseX) * follow;
+                mouseY += (targetY - mouseY) * follow;
+                cursorPresence += (targetPresence - cursorPresence) * follow;
+                resizeCanvas();
+                const width = canvas.width, height = canvas.height;
+                gl.uniform4f(uni.scene,  width, height, ((now - start) / 1000) * SHARED.timeScale, SHARED.colorCount);
+                gl.uniform4f(uni.space,  SHARED.offsetX, SHARED.offsetY, mouseX, mouseY);
+                gl.uniform4f(uni.cursor, SHARED.cursorEnabled ? cursorPresence : 0, SHARED.cursorEffect, SHARED.cursorStrength, SHARED.cursorRadius);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+                const settling = Math.abs(targetX - mouseX) > 0.001 || Math.abs(targetY - mouseY) > 0.001 || Math.abs(targetPresence - cursorPresence) > 0.001;
+                if (timeAnimated || settling) requestRender();
+                else lastNow = null;
+            }
+            requestRender();
+        })();
+    </script>
+</body>
+
+</html>
