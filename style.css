@@ -398,6 +398,8 @@ body * {
     visibility: hidden;
     pointer-events: none;
     transition: opacity 0.2s ease, visibility 0.2s ease;
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
 }
 
 .banner-editor.is-open {
@@ -406,13 +408,28 @@ body * {
     pointer-events: auto;
 }
 
+/* Same 3D "flip in" card treatment as #settings-panel */
 .banner-editor-card {
     width: min(680px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 1.25rem;
     border: 1px solid var(--border-medium);
     border-radius: 0.75rem;
     background: var(--bg);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    transform-style: preserve-3d;
+    transition-duration: 0.8s;
+    transition-property: transform, opacity;
+    filter: drop-shadow(0 0px 100px color-mix(in oklab, var(--link-hover) 5%, transparent));
+    transform: scale(0.01) rotate(-100deg) rotateY(20deg) translateZ(0px);
+    opacity: 0;
+}
+
+.banner-editor.is-open .banner-editor-card {
+    transform: translateY(0%) scale(1) rotate(-355deg) rotateY(20deg) translateZ(40px);
+    opacity: 1;
 }
 
 .banner-editor-header {
@@ -466,17 +483,24 @@ body * {
     cursor: grabbing;
 }
 
-.banner-editor-stage img {
+/* The size & position of the image inside the stage/banner is calculated via JS
+   using the original image's naturalWidth/naturalHeight (see initBannerEditor),
+   so crop & zoom are always proportional to the image's true dimensions. */
+.banner-fit-img {
     display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 50%;
-    transform: scale(1);
-    transform-origin: center center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    max-width: none;
+    max-height: none;
     pointer-events: none;
     user-select: none;
-    will-change: transform;
+    will-change: width, height, transform;
+}
+
+#banner-editor-empty {
+    position: relative;
+    z-index: 1;
 }
 
 .banner-editor-guide {
@@ -605,6 +629,10 @@ body * {
         padding: 1rem;
     }
 
+    .banner-editor.is-open .banner-editor-card {
+        transform: translateY(0%) scale(1) rotate(0deg) rotateY(0deg) translateZ(0px);
+    }
+
     .banner-editor-stage {
         aspect-ratio: 5 / 1;
     }
@@ -617,4 +645,52 @@ body * {
     .banner-editor-primary {
         flex: 1;
     }
+}
+
+/* ─── Background Color (animated background colour swatches) ───────── */
+.color-swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+}
+
+.color-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.25rem;
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    background: transparent;
+    cursor: pointer;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+.color-swatch-dot {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 999px;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
+    transition: transform 0.25s ease;
+}
+
+.color-swatch:hover .color-swatch-dot,
+.color-swatch.is-active .color-swatch-dot {
+    transform: scale(1.1);
+}
+
+.color-swatch:hover {
+    color: var(--link-hover);
+    background: color-mix(in oklab, var(--border-light) 40%, transparent);
+}
+
+.color-swatch.is-active {
+    border-color: var(--link-hover);
+    color: var(--link-hover);
 }
