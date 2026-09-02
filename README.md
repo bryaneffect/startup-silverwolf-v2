@@ -1,4 +1,4 @@
-# 🌙 Stay Awake - Startup Silverwolf v2
+#  Stay Awake - Startup Silverwolf v2
 
 **Personal Homepage Dashboard dengan Dark Mode & Animated Background**
 
@@ -297,8 +297,7 @@ https://www.google.com/search?q={query}
 
 - **Created by:** @exphert (original homepage)
 - **Edited by:** @bryaneffect
-- **Hosted by:** @intsomnia.arc
-- **Made with:** ❤️ + ☕
+- **Hosted by:** local host
 
 ---
 
@@ -308,7 +307,6 @@ https://www.google.com/search?q={query}
 - Instagram: https://instagram.com/bryannfx.os
 - TikTok: https://tiktok.com/@bryann_fx
 - WhatsApp: https://web.whatsapp.com/
-
 ---
 
 ## 📄 License
